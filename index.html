@@ -7,6 +7,7 @@
     <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -15,7 +16,47 @@
             background-color: #000;
             color: #d1d5db;
             overflow-x: hidden;
+            cursor: none;
         }
+
+        /* MOUSE ANIMATION STYLES */
+        .cursor-dot {
+            width: 6px;
+            height: 6px;
+            background-color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+            mix-blend-mode: difference;
+        }
+
+        .cursor-outline {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9998;
+            pointer-events: none;
+        }
+
+        /* PRELOADER STYLES */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: all;
+        }
+
         #hero-canvas {
             position: absolute;
             top: 0;
@@ -29,13 +70,18 @@
             background: #0a0a0c;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
         }
+        
+        /* NEW BUTTON BASE STYLES */
         .cta-button {
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            cursor: none;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
         }
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 40px -10px rgba(59, 130, 246, 0.5);
-        }
+
         .asymmetric-grid {
             display: grid;
             grid-template-columns: 1.1fr 0.9fr;
@@ -45,12 +91,10 @@
         }
         .bar-grow { transform-origin: bottom; }
         
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #050507; }
         ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
 
-        /* Modal specific styling */
         #pricing-modal {
             display: none;
             opacity: 0;
@@ -69,23 +113,67 @@
             color: #3b82f6;
         }
 
-        /* Nav Transition */
         #main-nav {
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            opacity: 0;
         }
         .nav-hidden {
             transform: translateY(-100%);
-            opacity: 0;
+            opacity: 0 !important;
             pointer-events: none;
+        }
+
+        #hero-title, #hero-sub, #hero-cta, #hero-visual-container {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        #scroll-top-btn {
+            position: fixed;
+            right: 2rem;
+            bottom: 2rem;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 90;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        #scroll-top-btn.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
-    <!-- NAV -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <div id="preloader">
+        <div id="loader-logo" class="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase italic">
+            FLOWSTATE<span class="text-blue-500">AI</span>
+        </div>
+    </div>
+
     <nav id="main-nav" class="fixed w-full z-50 px-6 py-8">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="text-xl font-black tracking-tighter text-white uppercase italic cursor-pointer">FLOWSTATE<span class="text-blue-500">AI</span></div>
+            <div onclick="scrollToTop()" class="text-xl font-black tracking-tighter text-white uppercase italic cursor-pointer select-none">FLOWSTATE<span class="text-blue-500">AI</span></div>
             <div id="nav-links" class="hidden md:flex space-x-12 text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">
                 <a href="#analytics" class="hover:text-white transition-colors">Analytics</a>
                 <a href="#how" class="hover:text-white transition-colors">Positioning</a>
@@ -97,15 +185,19 @@
         </div>
     </nav>
 
-    <!-- LANDING PAGE WRAPPER -->
+    <div id="scroll-top-btn" onclick="scrollToTop()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    </div>
+
     <div id="landing-page">
-        <!-- HERO SECTION -->
         <section id="hero-trigger" class="relative min-h-screen flex items-center px-6 pt-20 overflow-hidden">
             <canvas id="hero-canvas"></canvas>
             
             <div class="max-w-7xl mx-auto w-full asymmetric-grid gap-16 items-center relative z-10">
                 <div class="text-left">
-                    <div class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-10 backdrop-blur-md">
+                    <div id="hero-badge" class="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-10 backdrop-blur-md opacity-0">
                         <span class="relative flex h-2 w-2">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -132,8 +224,7 @@
                     </div>
                 </div>
 
-                <!-- PRODUCT UI PREVIEW -->
-                <div class="hidden lg:block">
+                <div id="hero-visual-container" class="hidden lg:block">
                     <div class="ui-card p-8 rounded-lg border-white/10">
                         <div class="flex justify-between items-center mb-10 border-b border-white/5 pb-5">
                             <span class="text-[10px] font-bold text-slate-500 tracking-widest uppercase">Live Operator Feed</span>
@@ -172,7 +263,6 @@
             </div>
         </section>
 
-        <!-- ANALYTICS SECTION -->
         <section id="analytics" class="py-32 px-6 bg-[#050507]">
             <div class="max-w-7xl mx-auto">
                 <div class="mb-16">
@@ -250,7 +340,6 @@
             </div>
         </section>
 
-        <!-- DISCOVERY SECTION -->
         <section class="py-40 px-6 bg-black">
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20">
                 <div class="w-full md:w-1/2">
@@ -281,7 +370,6 @@
             </div>
         </section>
 
-        <!-- TIMELINE -->
         <section id="timeline" class="py-24 border-y border-white/5 bg-white/[0.01]">
             <div class="max-w-7xl mx-auto px-6">
                 <h2 class="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] mb-16 text-center">The 10-Minute Reality</h2>
@@ -310,7 +398,6 @@
             </div>
         </section>
 
-        <!-- POSITIONING -->
         <section id="how" class="py-40 px-6">
             <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-32 items-center">
                 <div>
@@ -344,7 +431,6 @@
             </div>
         </section>
 
-        <!-- FINAL CTA SECTION -->
         <section class="py-60 px-6 bg-black text-center relative overflow-hidden">
             <div class="max-w-5xl mx-auto relative z-10">
                 <h2 class="text-6xl md:text-[100px] font-black text-white uppercase tracking-tighter leading-[0.85] mb-12">Stop guessing.<br>Start moving.</h2>
@@ -360,26 +446,19 @@
             </div>
         </section>
 
-        <!-- FOOTER -->
         <footer class="py-16 border-t border-white/5 text-center text-slate-700 text-[10px] font-black uppercase tracking-[0.3em]">
             <p>&copy; 2024 Flowstate AI. Decisive Commerce.</p>
         </footer>
     </div>
 
-    <!-- PRICING MODAL (POPUP) -->
     <div id="pricing-modal" class="fixed inset-0 z-[100] items-center justify-center p-6 md:p-12">
-        <!-- Backdrop -->
         <div onclick="togglePricing(false)" class="absolute inset-0 bg-black/80 backdrop-blur-xl"></div>
-        
-        <!-- Modal Content -->
         <div id="modal-container" class="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto ui-card rounded-2xl border-white/10 p-1 md:p-0">
-            <!-- Close Button -->
             <button onclick="togglePricing(false)" class="absolute top-6 right-6 z-[110] text-slate-500 hover:text-white transition-colors">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
 
             <div class="mx-auto p-8 md:p-16">
-                <!-- Heading -->
                 <div class="mb-12 text-center">
                     <div class="inline-block px-4 py-1.5 mb-4 rounded-full bg-blue-500/10 border border-blue-500/20">
                         <span class="text-[9px] font-black text-blue-500 uppercase tracking-[0.3em]">Operational Access</span>
@@ -389,9 +468,7 @@
                     </h2>
                 </div>
 
-                <!-- Pricing Grid -->
                 <div class="grid rounded-xl border border-white/5 overflow-hidden md:grid-cols-6 relative bg-white/[0.01]">
-                    <!-- Free Plan -->
                     <div class="flex flex-col justify-between border-b border-white/5 p-10 md:col-span-2 md:border-r md:border-b-0">
                         <div class="space-y-8">
                             <div>
@@ -405,11 +482,9 @@
                                     Perfect for exploring market signals without commitment.
                                 </p>
                             </div>
-
-                            <button class="w-full py-4 border border-white/10 rounded-sm text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+                            <button class="w-full py-4 border border-white/10 rounded-sm text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all cta-button">
                                 Initialize Free
                             </button>
-
                             <ul class="text-slate-400 space-y-4 text-[10px] font-bold uppercase tracking-widest">
                                 <li class="flex items-center gap-3">
                                     <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
@@ -423,7 +498,6 @@
                         </div>
                     </div>
 
-                    <!-- Pro Plan -->
                     <div class="grid gap-10 p-10 md:col-span-4 lg:grid-cols-2 bg-gradient-to-br from-blue-600/[0.05] to-transparent">
                         <div class="flex flex-col justify-between space-y-8">
                             <div>
@@ -437,7 +511,6 @@
                                     Designed for full-time operators requiring maximum velocity and precision.
                                 </p>
                             </div>
-                            
                             <div class="bg-black/60 rounded-lg border border-white/5 p-5">
                                 <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-4">Market Capture</p>
                                 <div class="h-20 w-full relative">
@@ -448,7 +521,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="flex flex-col justify-between">
                             <ul class="space-y-4 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                                 <li class="flex items-center gap-3">
@@ -468,9 +540,8 @@
                                     Margin Lock v2.0
                                 </li>
                             </ul>
-
                             <div class="mt-8">
-                                <button class="w-full bg-blue-600 text-white py-4 rounded-sm text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-900/20 mb-3">
+                                <button class="w-full bg-blue-600 text-white py-4 rounded-sm text-[9px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-900/20 mb-3 cta-button">
                                     Deploy Pro
                                 </button>
                                 <p class="text-center text-slate-600 text-[8px] font-bold uppercase tracking-widest italic">Includes 14-day intensive trial</p>
@@ -483,25 +554,97 @@
     </div>
 
     <script>
-        gsap.registerPlugin(ScrollTrigger);
+        gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+        const dot = document.querySelector('.cursor-dot');
+        const outline = document.querySelector('.cursor-outline');
+        
+        let mouseX = 0;
+        let mouseY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            
+            gsap.to(dot, { x: mouseX - 3, y: mouseY - 3, duration: 0.1, ease: "power2.out" });
+            gsap.to(outline, { x: mouseX - 15, y: mouseY - 15, duration: 0.4, ease: "power3.out" });
+        });
+
+        // REFINED BUTTON ANIMATION LOGIC
+        function setupButtonInteractions() {
+            const buttons = document.querySelectorAll('.cta-button');
+            
+            buttons.forEach(btn => {
+                // Magnetic Effect
+                btn.addEventListener('mousemove', (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    
+                    // Move button slightly towards cursor
+                    gsap.to(btn, {
+                        x: x * 0.2,
+                        y: y * 0.2,
+                        duration: 0.4,
+                        ease: "power2.out"
+                    });
+                });
+
+                // Hover State
+                btn.addEventListener('mouseenter', () => {
+                    gsap.to(outline, { scale: 1.8, backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 1)', duration: 0.3 });
+                    gsap.to(dot, { scale: 1.2, duration: 0.3 });
+                });
+
+                // Reset on Leave
+                btn.addEventListener('mouseleave', () => {
+                    gsap.to(btn, { x: 0, y: 0, duration: 0.6, ease: "elastic.out(1, 0.3)" });
+                    gsap.to(outline, { scale: 1, backgroundColor: 'transparent', borderColor: 'rgba(59, 130, 246, 0.5)', duration: 0.3 });
+                    gsap.to(dot, { scale: 1, duration: 0.3 });
+                });
+
+                // Click Physics
+                btn.addEventListener('mousedown', () => {
+                    gsap.to(btn, { scale: 0.94, duration: 0.1 });
+                });
+                btn.addEventListener('mouseup', () => {
+                    gsap.to(btn, { scale: 1, duration: 0.4, ease: "elastic.out(1, 0.3)" });
+                });
+            });
+            
+            // Handle regular links for cursor scaling
+            document.querySelectorAll('a, .cursor-pointer').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    gsap.to(outline, { scale: 1.8, duration: 0.3 });
+                });
+                el.addEventListener('mouseleave', () => {
+                    gsap.to(outline, { scale: 1, duration: 0.3 });
+                });
+            });
+        }
 
         const canvas = document.getElementById('hero-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
         const mouse = { x: null, y: null, radius: 200 };
 
-        // MODAL TOGGLE LOGIC
+        function scrollToTop() {
+            gsap.to(window, { duration: 1.5, scrollTo: 0, ease: "power4.inOut" });
+        }
+
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('scroll-top-btn');
+            if (window.scrollY > 500) btn.classList.add('visible');
+            else btn.classList.remove('visible');
+        });
+
         function togglePricing(show) {
             const modal = document.getElementById('pricing-modal');
             const container = document.getElementById('modal-container');
-            
             if (show) {
                 modal.classList.add('active');
                 gsap.fromTo(modal.querySelector('.absolute'), { opacity: 0 }, { opacity: 1, duration: 0.4 });
-                gsap.fromTo(container, 
-                    { opacity: 0, scale: 0.9, y: 20 }, 
-                    { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "back.out(1.2)" }
-                );
+                gsap.fromTo(container, { opacity: 0, scale: 0.9, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "back.out(1.2)" });
                 document.body.style.overflow = 'hidden';
             } else {
                 gsap.to(container, { opacity: 0, scale: 0.9, y: 20, duration: 0.3, ease: "power2.in", onComplete: () => {
@@ -513,32 +656,30 @@
         }
 
         class Particle {
-            constructor(x, y, directionX, directionY, size, color) {
-                this.x = x; this.y = y;
-                this.directionX = directionX; this.directionY = directionY;
+            constructor(x, y, dx, dy, size, color) {
+                this.x = x; this.y = y; this.dx = dx; this.dy = dy;
                 this.size = size; this.color = color;
             }
             draw() {
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
                 ctx.fill();
             }
             update() {
-                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
-                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
-                if (mouse.x !== null && mouse.y !== null) {
+                if (this.x > canvas.width || this.x < 0) this.dx = -this.dx;
+                if (this.y > canvas.height || this.y < 0) this.dy = -this.dy;
+                if (mouse.x !== null) {
                     let dx = mouse.x - this.x;
                     let dy = mouse.y - this.y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < mouse.radius + this.size) {
-                        const force = (mouse.radius - distance) / mouse.radius;
-                        this.x -= (dx / distance) * force * 5;
-                        this.y -= (dy / distance) * force * 5;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < mouse.radius) {
+                        const force = (mouse.radius - dist) / mouse.radius;
+                        this.x -= (dx / dist) * force * 5;
+                        this.y -= (dy / dist) * force * 5;
                     }
                 }
-                this.x += this.directionX;
-                this.y += this.directionY;
+                this.x += this.dx; this.y += this.dy;
                 this.draw();
             }
         }
@@ -547,22 +688,16 @@
             particles = [];
             let density = (canvas.height * canvas.width) / 10000;
             for (let i = 0; i < density; i++) {
-                let size = (Math.random() * 2) + 1;
-                let x = Math.random() * canvas.width;
-                let y = Math.random() * canvas.height;
-                let dx = (Math.random() * 0.4) - 0.2;
-                let dy = (Math.random() * 0.4) - 0.2;
-                particles.push(new Particle(x, y, dx, dy, size, 'rgba(59, 130, 246, 0.4)'));
+                particles.push(new Particle(Math.random() * canvas.width, Math.random() * canvas.height, (Math.random() * 0.4) - 0.2, (Math.random() * 0.4) - 0.2, (Math.random() * 2) + 1, 'rgba(59, 130, 246, 0.4)'));
             }
         }
 
         function connect() {
             for (let a = 0; a < particles.length; a++) {
                 for (let b = a; b < particles.length; b++) {
-                    let distance = ((particles[a].x - particles[b].x) ** 2) + ((particles[a].y - particles[b].y) ** 2);
-                    if (distance < (canvas.width / 8) * (canvas.height / 8)) {
-                        let opacity = 1 - (distance / 25000);
-                        ctx.strokeStyle = `rgba(59, 130, 246, ${opacity * 0.2})`;
+                    let dist = ((particles[a].x - particles[b].x) ** 2) + ((particles[a].y - particles[b].y) ** 2);
+                    if (dist < (canvas.width / 8) * (canvas.height / 8)) {
+                        ctx.strokeStyle = `rgba(59, 130, 246, ${(1 - (dist / 25000)) * 0.2})`;
                         ctx.lineWidth = 1;
                         ctx.beginPath();
                         ctx.moveTo(particles[a].x, particles[a].y);
@@ -581,60 +716,36 @@
             connect();
         }
 
-        const resize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initParticles();
-        };
+        const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles(); };
 
         window.onload = () => {
-            resize();
-            animate();
+            resize(); animate();
+            setupButtonInteractions();
+            
+            const mainTl = gsap.timeline({ defaults: { ease: "power4.inOut" }});
+            
+            mainTl.from("#loader-logo", { scale: 0.8, opacity: 0, duration: 1.2, letterSpacing: "0.5em" })
+              .to("#loader-logo", { scale: 1.2, opacity: 0, duration: 0.8, delay: 0.5 })
+              .to("#preloader", { yPercent: -100, duration: 1.2, ease: "expo.inOut" }, "-=0.2")
+              .to("#main-nav", { opacity: 1, duration: 1 }, "-=0.5")
+              .to(["#hero-badge", "#hero-title", "#hero-sub", "#hero-cta", "#hero-visual-container"], { opacity: 1, y: 0, stagger: 0.1, duration: 0.8 }, "-=0.8");
 
-            // HERO ENTRANCE
-            const tl = gsap.timeline();
-            tl.from("#hero-title", { opacity: 0, y: 50, duration: 1, ease: "power4.out" })
-              .from("#hero-sub", { opacity: 0, y: 30, duration: 1, ease: "power4.out" }, "-=0.7")
-              .from("#hero-cta", { opacity: 0, y: 30, duration: 1, ease: "power4.out" }, "-=0.7");
-
-            // NAV VISIBILITY LOGIC
             ScrollTrigger.create({
-                trigger: "#hero-trigger",
-                start: "bottom 80px", // Trigger slightly before the bottom of the hero
+                trigger: "#hero-trigger", start: "bottom 80px",
                 onEnter: () => document.getElementById('main-nav').classList.add('nav-hidden'),
                 onLeaveBack: () => document.getElementById('main-nav').classList.remove('nav-hidden'),
             });
 
-            // CHART BARS ANIMATION
             gsap.from(".bar-grow", {
-                scrollTrigger: { 
-                    trigger: "#analytics", 
-                    start: "top 80%",
-                    once: true 
-                },
-                scaleY: 0, 
-                duration: 1.5, 
-                stagger: 0.1, 
-                ease: "expo.out",
-                clearProps: "all"
+                scrollTrigger: { trigger: "#analytics", start: "top 80%", once: true },
+                scaleY: 0, duration: 1.5, stagger: 0.1, ease: "expo.out", clearProps: "all"
             });
         };
 
         window.addEventListener('resize', resize);
         window.addEventListener('mousemove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; });
         window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
-        
-        // Escape key to close modal
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') togglePricing(false);
-        });
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape') togglePricing(false); });
     </script>
-    <style>
-        @keyframes scan {
-            0% { transform: translateY(0); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(-100px); opacity: 0; }
-        }
-    </style>
 </body>
 </html>
