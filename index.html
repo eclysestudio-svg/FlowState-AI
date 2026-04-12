@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flowstate AI | Find what sells. Act instantly.</title>
     <!-- Dependencies -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="output.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -28,7 +28,7 @@
             top: 0;
             left: 0;
             border-radius: 50%;
-            z-index: 9999;
+            z-index: 99999;
             pointer-events: none;
             mix-blend-mode: difference;
         }
@@ -41,7 +41,7 @@
             top: 0;
             left: 0;
             border-radius: 50%;
-            z-index: 9998;
+            z-index: 99998;
             pointer-events: none;
         }
 
@@ -55,10 +55,34 @@
             align-items: center;
             justify-content: center;
             pointer-events: all;
+            perspective: 800px;
+        }
+
+        #preloader-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        #loader-logo {
+            position: relative;
+            z-index: 1;
+            opacity: 0;
+            will-change: transform;
+            text-shadow: 0 0 60px rgba(59,130,246,0.3);
+            transition: text-shadow 0.3s ease;
+        }
+
+        @keyframes float {
+            0%   { transform: translateY(0px) rotate(0deg); }
+            33%  { transform: translateY(-12px) rotate(-0.4deg); }
+            66%  { transform: translateY(-6px) rotate(0.3deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
         }
 
         #hero-canvas {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
@@ -153,6 +177,21 @@
             visibility: visible;
         }
 
+        /* SECTION REVEAL — all sections start invisible */
+        #landing-page { position: relative; z-index: 1; }
+        
+        .reveal-section {
+            opacity: 0;
+            transform: translateY(60px);
+            will-change: opacity, transform;
+        }
+
+        /* Ensure section backgrounds sit above the fixed canvas */
+        section, footer {
+            position: relative;
+            z-index: 1;
+        }
+
         @keyframes scan {
             0% { transform: translateY(0); opacity: 0; }
             50% { opacity: 1; }
@@ -166,8 +205,14 @@
     <div class="cursor-outline"></div>
 
     <div id="preloader">
-        <div id="loader-logo" class="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase italic">
-            FLOWSTATE<span class="text-blue-500">AI</span>
+        <canvas id="preloader-canvas"></canvas>
+        <div id="preloader-content" style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:3rem;">
+            <div id="loader-logo" class="text-3xl md:text-5xl font-black tracking-tighter text-white uppercase italic select-none">
+                FLOWSTATE<span class="text-blue-500">AI</span>
+            </div>
+            <button id="proceed-btn" onclick="proceedToSite()" class="cta-button" style="opacity:0;pointer-events:none;background:transparent;border:1px solid rgba(59,130,246,0.5);color:white;padding:0.85rem 3rem;font-size:0.65rem;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;border-radius:2px;cursor:none;transition:background 0.3s,border-color 0.3s;">
+                Proceed
+            </button>
         </div>
     </div>
 
@@ -175,9 +220,9 @@
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div onclick="scrollToTop()" class="text-xl font-black tracking-tighter text-white uppercase italic cursor-pointer select-none">FLOWSTATE<span class="text-blue-500">AI</span></div>
             <div id="nav-links" class="hidden md:flex space-x-12 text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">
-                <a href="#analytics" class="hover:text-white transition-colors">Analytics</a>
-                <a href="#how" class="hover:text-white transition-colors">Positioning</a>
-                <a href="#timeline" class="hover:text-white transition-colors">The 10-Min Flow</a>
+                <a onclick="navTo('#analytics')" class="hover:text-white transition-colors cursor-pointer">Analytics</a>
+                <a onclick="navTo('#how')" class="hover:text-white transition-colors cursor-pointer">Positioning</a>
+                <a onclick="navTo('#timeline')" class="hover:text-white transition-colors cursor-pointer">The 10-Min Flow</a>
             </div>
             <button onclick="togglePricing(true)" class="bg-white text-black px-8 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-widest cta-button">
                 Start Free
@@ -263,7 +308,7 @@
             </div>
         </section>
 
-        <section id="analytics" class="py-32 px-6 bg-[#050507]">
+        <section id="analytics" class="reveal-section py-32 px-6 bg-[#050507]">
             <div class="max-w-7xl mx-auto">
                 <div class="mb-16">
                     <h2 class="text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] mb-4">Command Center</h2>
@@ -340,7 +385,7 @@
             </div>
         </section>
 
-        <section class="py-40 px-6 bg-black">
+        <section class="reveal-section py-40 px-6 bg-black">
             <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-20">
                 <div class="w-full md:w-1/2">
                     <div class="ui-card p-10 border-blue-500/20 relative overflow-hidden group">
@@ -370,7 +415,7 @@
             </div>
         </section>
 
-        <section id="timeline" class="py-24 border-y border-white/5 bg-white/[0.01]">
+        <section id="timeline" class="reveal-section py-24 border-y border-white/5 bg-white/[0.01]">
             <div class="max-w-7xl mx-auto px-6">
                 <h2 class="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] mb-16 text-center">The 10-Minute Reality</h2>
                 <div class="grid md:grid-cols-4 gap-12">
@@ -398,7 +443,7 @@
             </div>
         </section>
 
-        <section id="how" class="py-40 px-6">
+        <section id="how" class="reveal-section py-40 px-6">
             <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-32 items-center">
                 <div>
                     <h2 class="text-4xl md:text-5xl font-extrabold text-white leading-[1.1] uppercase tracking-tighter mb-16">The difference is<br>decisive.</h2>
@@ -431,7 +476,7 @@
             </div>
         </section>
 
-        <section class="py-60 px-6 bg-black text-center relative overflow-hidden">
+        <section class="reveal-section py-60 px-6 bg-black text-center relative overflow-hidden">
             <div class="max-w-5xl mx-auto relative z-10">
                 <h2 class="text-6xl md:text-[100px] font-black text-white uppercase tracking-tighter leading-[0.85] mb-12">Stop guessing.<br>Start moving.</h2>
                 <p class="text-slate-500 text-lg md:text-xl italic mb-16 max-w-2xl mx-auto">"The winners move early. The longer you wait, the more you waste."</p>
@@ -446,7 +491,7 @@
             </div>
         </section>
 
-        <footer class="py-16 border-t border-white/5 text-center text-slate-700 text-[10px] font-black uppercase tracking-[0.3em]">
+        <footer class="reveal-section py-16 border-t border-white/5 text-center text-slate-700 text-[10px] font-black uppercase tracking-[0.3em]">
             <p>&copy; 2024 Flowstate AI. Decisive Commerce.</p>
         </footer>
     </div>
@@ -632,6 +677,17 @@
             gsap.to(window, { duration: 1.5, scrollTo: 0, ease: "power4.inOut" });
         }
 
+        // Nav scroll — instantly reveal the target section then smooth scroll to it
+        function navTo(selector) {
+            const target = document.querySelector(selector);
+            if (!target) return;
+            // If section is still hidden, reveal it immediately
+            if (parseFloat(gsap.getProperty(target, 'opacity')) < 1) {
+                gsap.to(target, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" });
+            }
+            gsap.to(window, { duration: 1.2, scrollTo: { y: target, offsetY: 80 }, ease: "power4.inOut" });
+        }
+
         window.addEventListener('scroll', () => {
             const btn = document.getElementById('scroll-top-btn');
             if (window.scrollY > 500) btn.classList.add('visible');
@@ -718,22 +774,172 @@
 
         const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; initParticles(); };
 
+        // ---- PRELOADER PARTICLE CANVAS ----
+        const preCanvas = document.getElementById('preloader-canvas');
+        const preCtx = preCanvas.getContext('2d');
+        let preParticles = [];
+        const preMouse = { x: null, y: null, radius: 220 };
+        let preAnimId = null;
+
+        function initPreCanvas() {
+            preCanvas.width = window.innerWidth;
+            preCanvas.height = window.innerHeight;
+            preParticles = [];
+            const density = (preCanvas.width * preCanvas.height) / 10000;
+            for (let i = 0; i < density; i++) {
+                preParticles.push({
+                    x: Math.random() * preCanvas.width,
+                    y: Math.random() * preCanvas.height,
+                    ox: 0, oy: 0,
+                    dx: (Math.random() * 0.4) - 0.2,
+                    dy: (Math.random() * 0.4) - 0.2,
+                    size: Math.random() * 2 + 1,
+                });
+            }
+        }
+
+        function animatePreCanvas() {
+            preAnimId = requestAnimationFrame(animatePreCanvas);
+            preCtx.fillStyle = '#000';
+            preCtx.fillRect(0, 0, preCanvas.width, preCanvas.height);
+
+            preParticles.forEach(p => {
+                // Boundary bounce
+                if (p.x > preCanvas.width || p.x < 0) p.dx = -p.dx;
+                if (p.y > preCanvas.height || p.y < 0) p.dy = -p.dy;
+                // Mouse repulsion
+                if (preMouse.x !== null) {
+                    const ddx = preMouse.x - p.x;
+                    const ddy = preMouse.y - p.y;
+                    const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+                    if (dist < preMouse.radius) {
+                        const force = (preMouse.radius - dist) / preMouse.radius;
+                        p.x -= (ddx / dist) * force * 5;
+                        p.y -= (ddy / dist) * force * 5;
+                    }
+                }
+                p.x += p.dx; p.y += p.dy;
+                preCtx.beginPath();
+                preCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                preCtx.fillStyle = 'rgba(59,130,246,0.45)';
+                preCtx.fill();
+            });
+
+            // Connect nearby particles
+            for (let a = 0; a < preParticles.length; a++) {
+                for (let b = a + 1; b < preParticles.length; b++) {
+                    const distSq = (preParticles[a].x - preParticles[b].x) ** 2 + (preParticles[a].y - preParticles[b].y) ** 2;
+                    const threshold = (preCanvas.width / 8) * (preCanvas.height / 8);
+                    if (distSq < threshold) {
+                        preCtx.strokeStyle = `rgba(59,130,246,${(1 - distSq / 25000) * 0.2})`;
+                        preCtx.lineWidth = 1;
+                        preCtx.beginPath();
+                        preCtx.moveTo(preParticles[a].x, preParticles[a].y);
+                        preCtx.lineTo(preParticles[b].x, preParticles[b].y);
+                        preCtx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Mouse interaction on preloader
+        const loaderLogo = document.getElementById('loader-logo');
+        let floatAnim = null;
+
+        window.addEventListener('mousemove', (e) => {
+            preMouse.x = e.clientX;
+            preMouse.y = e.clientY;
+
+            // Logo mouse parallax — gentle tilt/drift toward cursor
+            if (loaderLogo && document.getElementById('preloader').style.display !== 'none') {
+                const rect = loaderLogo.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const dx = (e.clientX - cx) / window.innerWidth;
+                const dy = (e.clientY - cy) / window.innerHeight;
+                gsap.to(loaderLogo, {
+                    rotationY: dx * 18,
+                    rotationX: -dy * 12,
+                    x: dx * 24,
+                    duration: 0.6,
+                    ease: "power2.out",
+                    overwrite: "auto",
+                });
+                loaderLogo.style.textShadow = `${-dx * 20}px ${-dy * 10}px 60px rgba(59,130,246,${0.3 + Math.abs(dx) * 0.4})`;
+            }
+        });
+
+        window.addEventListener('mouseout', () => { preMouse.x = null; preMouse.y = null; });
+
         window.onload = () => {
+            initPreCanvas();
+            animatePreCanvas();
             resize(); animate();
             setupButtonInteractions();
-            
-            const mainTl = gsap.timeline({ defaults: { ease: "power4.inOut" }});
-            
-            mainTl.from("#loader-logo", { scale: 0.8, opacity: 0, duration: 1.2, letterSpacing: "0.5em" })
-              .to("#loader-logo", { scale: 1.2, opacity: 0, duration: 0.8, delay: 0.5 })
-              .to("#preloader", { yPercent: -100, duration: 1.2, ease: "expo.inOut" }, "-=0.2")
-              .to("#main-nav", { opacity: 1, duration: 1 }, "-=0.5")
-              .to(["#hero-badge", "#hero-title", "#hero-sub", "#hero-cta", "#hero-visual-container"], { opacity: 1, y: 0, stagger: 0.1, duration: 0.8 }, "-=0.8");
+
+            // 1. Fade in logo, then show Proceed button
+            gsap.set(loaderLogo, { opacity: 0, scale: 0.75, y: 20 });
+            const introTl = gsap.timeline({ defaults: { ease: "power4.inOut" } });
+
+            introTl
+              .to(loaderLogo, { opacity: 1, scale: 1, y: 0, duration: 1.1, ease: "back.out(1.4)" })
+              .add(() => { loaderLogo.style.animation = 'float 3.8s ease-in-out infinite'; }, "+=0.2")
+              .to("#proceed-btn", { opacity: 1, duration: 0.8, ease: "power2.out", onComplete: () => {
+                  document.getElementById('proceed-btn').style.pointerEvents = 'auto';
+              }}, "+=0.5");
+
+            // Called when Proceed is clicked
+            window.proceedToSite = function() {
+                const btn = document.getElementById('proceed-btn');
+                btn.style.pointerEvents = 'none';
+                loaderLogo.style.animation = 'none';
+                gsap.timeline({ defaults: { ease: "power4.inOut" } })
+                  .to(btn, { opacity: 0, y: 10, duration: 0.35 })
+                  .to(loaderLogo, { scale: 1.15, opacity: 0, duration: 0.6, ease: "power3.in" }, "-=0.2")
+                  .to("#preloader", { yPercent: -100, duration: 1.1, ease: "expo.inOut", onComplete: () => {
+                      cancelAnimationFrame(preAnimId);
+                      document.getElementById('preloader').style.display = 'none';
+                  }}, "-=0.1")
+                  .to("#main-nav", { opacity: 1, duration: 1 }, "-=0.6")
+                  .to(["#hero-badge", "#hero-title", "#hero-sub", "#hero-cta", "#hero-visual-container"], { opacity: 1, y: 0, stagger: 0.1, duration: 0.8 }, "-=0.8");
+            };
 
             ScrollTrigger.create({
                 trigger: "#hero-trigger", start: "bottom 80px",
                 onEnter: () => document.getElementById('main-nav').classList.add('nav-hidden'),
                 onLeaveBack: () => document.getElementById('main-nav').classList.remove('nav-hidden'),
+            });
+
+            // Scroll-triggered section reveals
+            // Each section fades + rises in when it enters the viewport
+            gsap.utils.toArray('.reveal-section').forEach(section => {
+                gsap.to(section, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 1.1,
+                    ease: "power3.out",
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 82%",
+                        once: true,
+                    }
+                });
+            });
+
+            // Also stagger inner cards/items within sections
+            gsap.utils.toArray('.reveal-section .ui-card').forEach((card, i) => {
+                gsap.from(card, {
+                    opacity: 0,
+                    y: 40,
+                    duration: 0.8,
+                    ease: "power3.out",
+                    scrollTrigger: {
+                        trigger: card,
+                        start: "top 88%",
+                        once: true,
+                    },
+                    delay: (i % 3) * 0.1
+                });
             });
 
             gsap.from(".bar-grow", {
